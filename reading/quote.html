@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote Jar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F1E7;
+    --kraft: #EFE8DC;
+    --kraft-dark: #DED1BB;
+    --ink: #3E362C;
+    --ink-soft: #8A7B6C;
+    --red: #A8574A;
+    --sage: #9AAE8C;
+    --rose: #D9A5A0;
+    --rule: rgba(110, 140, 170, 0.20);
+    --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); overflow-x: hidden; }
+  body {
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 14px 12px 18px;
+    background-image: var(--noise);
+  }
+  .wrap { width: 100%; max-width: 360px; }
+  .head { text-align: center; margin-bottom: 14px; }
+  .head h1 { font-family: 'Special Elite', monospace; font-weight: 400; font-size: 20px; letter-spacing: 0.03em; }
+  .head p { font-size: 11.5px; color: var(--ink-soft); font-style: italic; margin-top: 1px; }
+  .head .sprig { display: block; margin: 0 auto 2px; width: 46px; height: 16px; }
+
+  /* ---------- the bookmark card ---------- */
+  .scene { perspective: 1100px; cursor: pointer; -webkit-tap-highlight-color: transparent; outline: none; padding-top: 8px; }
+  .scene:focus-visible .face { box-shadow: 0 0 0 2px var(--red); }
+  .inner { display: grid; transform-style: preserve-3d; transition: transform 0.9s cubic-bezier(.3,1.3,.5,1); }
+  .flipped .inner { transform: rotateY(180deg); }
+  .face {
+    grid-area: 1 / 1;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background-color: var(--kraft);
+    background-image: var(--noise), repeating-linear-gradient(180deg, transparent 0 25px, var(--rule) 25px 26px);
+    background-position: 0 0, 0 52px;
+    border-radius: 10px;
+    border: 1px solid var(--kraft-dark);
+    box-shadow: 0 1px 0 #fff inset, 0 8px 20px rgba(62, 54, 44, 0.13);
+    padding: 30px 22px 22px 40px;
+    min-height: 260px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .face::after {                 /* red margin line, like a library card */
+    content: ''; position: absolute; top: 0; bottom: 0; left: 30px; width: 1px;
+    background: rgba(168, 87, 74, 0.32);
+  }
+  .tape {
+    position: absolute; top: -9px; left: 50%;
+    width: 84px; height: 22px; margin-left: -42px;
+    background: repeating-linear-gradient(45deg, rgba(217, 165, 160, 0.75) 0 6px, rgba(236, 200, 195, 0.75) 6px 12px);
+    transform: rotate(-3deg);
+    clip-path: polygon(3% 0, 97% 0, 100% 20%, 97% 45%, 100% 70%, 97% 100%, 3% 100%, 0 75%, 3% 50%, 0 25%);
+    z-index: 2;
+  }
+  .back .tape { background: repeating-linear-gradient(45deg, rgba(154, 174, 140, 0.75) 0 6px, rgba(190, 206, 178, 0.75) 6px 12px); transform: rotate(2deg); }
+  .back { transform: rotateY(180deg); justify-content: center; }
+
+  .front .row { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-soft); }
+  .front .row b { font-family: 'Special Elite', monospace; font-weight: 400; color: var(--red); letter-spacing: 0.06em; }
+  .front .big { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px 0 4px; }
+  .flower { width: 54px; height: 64px; margin-bottom: 6px; transform: rotate(-8deg); }
+  .front .ttl { font-family: 'Special Elite', monospace; font-size: 20px; line-height: 1.25; }
+  .front .tap { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; animation: nudge 2.4s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(-2px); } }
+  .stamp {
+    position: absolute; right: 16px; bottom: 18px;
+    font-family: 'Special Elite', monospace; font-size: 9px; letter-spacing: 0.14em; line-height: 1.3;
+    color: var(--red); text-align: center;
+    border: 1.5px solid var(--red); border-radius: 50%;
+    width: 56px; height: 56px; display: grid; place-items: center;
+    transform: rotate(-14deg); opacity: 0.55;
+  }
+
+  .back blockquote { font-size: 15px; line-height: 26px; position: relative; }
+  .back blockquote::before {
+    content: '“'; font-family: 'Special Elite', monospace; font-size: 46px; color: var(--rose);
+    position: absolute; left: -26px; top: -14px;
+  }
+  .back .who { margin-top: 14px; font-size: 12px; color: var(--ink-soft); text-align: right; font-style: italic; }
+  .back .mine { font-family: 'Special Elite', monospace; font-size: 9px; color: var(--sage); letter-spacing: 0.14em; text-align: right; margin-top: 6px; }
+  .remove {
+    position: absolute; left: 40px; bottom: 10px;
+    background: none; border: none; cursor: pointer;
+    font: inherit; font-size: 10.5px; color: var(--ink-soft);
+    padding: 3px 8px; border-radius: 999px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .remove:hover { color: var(--red); }
+  .remove.armed { background: rgba(217, 165, 160, 0.35); color: var(--red); }
+  .jar-info { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--ink-soft); font-size: 11px; color: var(--ink-soft); }
+  .reset { font: inherit; font-size: 11px; background: none; border: 1px dashed var(--red); color: var(--red); border-radius: 999px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+  .reset.armed { background: var(--red); color: var(--kraft); border-style: solid; }
+  .typing::after { content: '▍'; animation: blink 0.8s steps(1) infinite; color: var(--ink-soft); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- buttons ---------- */
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .btn {
+    font: inherit; font-size: 12px;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px dashed var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn:hover { background: var(--kraft); }
+  .btn:active { transform: scale(0.97); }
+  .btn.solid { background: var(--ink); color: var(--kraft); border: 1px solid var(--ink); }
+  .btn.solid:hover { background: #2C261F; }
+
+  .form {
+    margin-top: 12px;
+    background-color: var(--kraft);
+    background-image: var(--noise);
+    border: 1px solid var(--kraft-dark);
+    border-radius: 10px;
+    padding: 14px;
+    display: none;
+  }
+  .form.open { display: block; animation: slide 0.3s ease; }
+  @keyframes slide { from { opacity: 0; transform: translateY(-6px); } }
+  .form label { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 4px; }
+  .form textarea, .form input {
+    width: 100%; font: inherit; font-size: 13px; color: var(--ink);
+    background: rgba(255,255,255,0.55);
+    border: none; border-bottom: 1px solid var(--ink-soft);
+    border-radius: 6px 6px 0 0;
+    padding: 7px 8px; outline: none; resize: vertical; margin-bottom: 10px;
+  }
+  .form textarea { min-height: 64px; }
+  .form textarea:focus, .form input:focus { border-bottom-color: var(--red); background: rgba(255,255,255,0.8); }
+  .form .save { width: 100%; }
+  .note { font-size: 11px; color: var(--sage); min-height: 14px; margin-top: 6px; }
+  .note.err { color: var(--red); }
+  .list { margin-top: 8px; border-top: 1px dashed var(--ink-soft); padding-top: 6px; max-height: 160px; overflow-y: auto; }
+  .list .empty { font-size: 11px; color: var(--ink-soft); font-style: italic; }
+  .list li { list-style: none; display: flex; gap: 8px; align-items: flex-start; font-size: 11px; padding: 6px 0; border-bottom: 1px dotted var(--kraft-dark); }
+  .list li::before { content: '✿'; color: var(--rose); }
+  .list li.empty::before { content: none; }
+  .list li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .list li em { color: var(--ink-soft); }
+  .list li button { background: none; border: none; color: var(--red); font: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <svg class="sprig" viewBox="0 0 46 16" aria-hidden="true">
+      <path d="M2 12 Q23 4 44 12" stroke="#9AAE8C" stroke-width="1.2" fill="none"/>
+      <ellipse cx="12" cy="7.5" rx="3.5" ry="1.6" transform="rotate(-30 12 7.5)" fill="#9AAE8C"/>
+      <ellipse cx="34" cy="7.5" rx="3.5" ry="1.6" transform="rotate(30 34 7.5)" fill="#9AAE8C"/>
+      <circle cx="23" cy="7" r="3" fill="#D9A5A0"/><circle cx="23" cy="7" r="1.1" fill="#F3D9A8"/>
+    </svg>
+    <h1>The Quote Jar</h1>
+    <p>a little bookmark for every day</p>
+  </div>
+
+  <div class="scene" id="scene" role="button" tabindex="0" aria-label="Flip the bookmark to reveal a quote">
+    <div class="inner">
+      <div class="face front">
+        <div class="tape"></div>
+        <div class="row"><span>CARD Nº <b id="cardNo">001</b></span><span id="date"></span></div>
+        <div class="big">
+          <svg class="flower" viewBox="0 0 54 64" aria-hidden="true">
+            <path d="M27 62 C27 46 26 36 27 24" stroke="#8FA37F" stroke-width="1.6" fill="none"/>
+            <path d="M27 46 C20 44 15 38 14 32 C21 33 26 38 27 46 Z" fill="#9AAE8C"/>
+            <path d="M27 40 C33 37 38 33 40 27 C33 28 28 33 27 40 Z" fill="#AFC0A2"/>
+            <g transform="translate(27 16)">
+              <ellipse rx="5" ry="9" fill="#D9A5A0" transform="rotate(0)  translate(0 -6)"/>
+              <ellipse rx="5" ry="9" fill="#E4B6B1" transform="rotate(72) translate(0 -6)"/>
+              <ellipse rx="5" ry="9" fill="#D9A5A0" transform="rotate(144) translate(0 -6)"/>
+              <ellipse rx="5" ry="9" fill="#E4B6B1" transform="rotate(216) translate(0 -6)"/>
+              <ellipse rx="5" ry="9" fill="#D9A5A0" transform="rotate(288) translate(0 -6)"/>
+              <circle r="4" fill="#E9C77E"/>
+            </g>
+          </svg>
+          <div class="ttl">a quote is<br>waiting for you</div>
+          <div class="tap">~ tap the bookmark ~</div>
+        </div>
+        <div class="stamp">READ<br>✦<br>MORE</div>
+      </div>
+      <div class="face back">
+        <div class="tape"></div>
+        <blockquote id="quote"></blockquote>
+        <div class="who" id="author"></div>
+        <div class="mine" id="mine"></div>
+        <button class="remove" id="remove" type="button">✕ remove from jar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn solid" id="another" type="button">✦ Another quote</button>
+    <button class="btn" id="toggleForm" type="button">+ Add your own</button>
+  </div>
+
+  <div class="form" id="form">
+    <label for="newQuote">Your quote</label>
+    <textarea id="newQuote" maxlength="400" placeholder="A line that stayed with you…"></textarea>
+    <label for="newAuthor">Author / book</label>
+    <input id="newAuthor" type="text" maxlength="80" placeholder="Anonymous">
+    <button class="btn solid save" id="saveQuote" type="button">Drop it in the jar ✿</button>
+    <div class="note" id="note"></div>
+    <ul class="list" id="list"></ul>
+    <div class="jar-info">
+      <span id="jarInfo"></span>
+      <button class="reset" id="resetJar" type="button">↺ Reset jar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var KEY = 'notion-quotes-v1';
+    var data = { mine: [], last: null, count: 0 };
+    try { data = Object.assign(data, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+
+    var scene = document.getElementById('scene');
+    var qEl = document.getElementById('quote');
+    var aEl = document.getElementById('author');
+    var mineEl = document.getElementById('mine');
+    var typer = null;
+
+    var now = new Date();
+    document.getElementById('date').textContent =
+      ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+
+    function pool() {
+      return data.mine.map(function (q) { return { t: q.t, a: q.a, mine: true }; });
+    }
+
+    function pick() {
+      var all = pool(), q;
+      if (!all.length) return null;
+      do { q = all[Math.floor(Math.random() * all.length)]; } while (data.last && q.t === data.last.t && all.length > 1);
+      return q;
+    }
+
+    function show(q, animate) {
+      clearInterval(typer);
+      removeBtn.style.display = q ? '' : 'none';
+      if (!q) {
+        qEl.classList.remove('typing');
+        qEl.textContent = 'Your jar is empty for now. Tap “+ Add your own” to drop in a quote ♡';
+        aEl.textContent = ''; mineEl.textContent = '';
+        return;
+      }
+      aEl.textContent = '— ' + (q.a || 'Anonymous');
+      mineEl.textContent = '';
+      if (!animate) { qEl.textContent = q.t; qEl.classList.remove('typing'); return; }
+      var i = 0;
+      qEl.textContent = '';
+      qEl.classList.add('typing');
+      typer = setInterval(function () {
+        i += 2;
+        qEl.textContent = q.t.slice(0, i);
+        if (i >= q.t.length) { clearInterval(typer); qEl.classList.remove('typing'); }
+      }, 22);
+    }
+
+    function setCardNo() { document.getElementById('cardNo').textContent = String(data.count % 999 + 1).padStart(3, '0'); }
+
+    function draw() {
+      var q = pick();
+      data.last = q;
+      if (q) data.count++;
+      save(); setCardNo();
+      show(q, true);
+    }
+
+    function flip() {
+      if (!scene.classList.contains('flipped')) { qEl.textContent = ''; setTimeout(draw, 300); }
+      scene.classList.toggle('flipped');
+    }
+
+    scene.addEventListener('click', flip);
+    scene.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+    });
+
+    document.getElementById('another').addEventListener('click', function () {
+      if (!scene.classList.contains('flipped')) { flip(); return; }
+      scene.classList.remove('flipped');
+      setTimeout(function () { qEl.textContent = ''; scene.classList.add('flipped'); setTimeout(draw, 300); }, 450);
+    });
+
+    // ---------- your own quotes ----------
+    var form = document.getElementById('form');
+    var note = document.getElementById('note');
+    document.getElementById('toggleForm').addEventListener('click', function () {
+      form.classList.toggle('open');
+      this.textContent = form.classList.contains('open') ? '× Close' : '+ Add your own';
+    });
+
+    function renderList() {
+      var list = document.getElementById('list');
+      list.innerHTML = '';
+      var n = pool().length;
+      document.getElementById('jarInfo').textContent = '🫙 ' + n + ' quote' + (n === 1 ? '' : 's');
+      if (!data.mine.length) {
+        list.innerHTML = '<li class="empty">No quotes of your own yet.</li>';
+        return;
+      }
+      data.mine.forEach(function (q, i) {
+        var li = document.createElement('li');
+        var s = document.createElement('span');
+        s.textContent = '“' + q.t + '” ';
+        var em = document.createElement('em');
+        em.textContent = '— ' + (q.a || 'Anonymous');
+        s.appendChild(em);
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '×';
+        del.setAttribute('aria-label', 'Remove quote');
+        del.addEventListener('click', function () { data.mine.splice(i, 1); save(); renderList(); });
+        li.appendChild(s); li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    // remove the quote on the card (two taps, no browser dialogs inside Notion)
+    function twoTap(btn, label, armedLabel, action) {
+      var t;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();                     // don't flip the card
+        if (!btn.classList.contains('armed')) {
+          btn.classList.add('armed'); btn.textContent = armedLabel;
+          t = setTimeout(function () { btn.classList.remove('armed'); btn.textContent = label; }, 2500);
+          return;
+        }
+        clearTimeout(t);
+        btn.classList.remove('armed'); btn.textContent = label;
+        action();
+      });
+    }
+    var removeBtn = document.getElementById('remove');
+    removeBtn.addEventListener('keydown', function (e) { e.stopPropagation(); });
+    twoTap(removeBtn, '✕ remove from jar', 'tap again to remove', function () {
+      var q = data.last;
+      if (!q) return;
+      var idx = data.mine.findIndex(function (m) { return m.t === q.t; });
+      if (idx >= 0) data.mine.splice(idx, 1);
+      data.last = null;
+      save(); renderList();
+      scene.classList.remove('flipped');
+    });
+
+    twoTap(document.getElementById('resetJar'), '↺ Reset jar', 'tap again: empties the jar', function () {
+      data.mine = [];
+      data.last = null; data.count = 0;
+      save(); renderList(); setCardNo();
+      scene.classList.remove('flipped');
+      note.className = 'note';
+      note.textContent = 'The jar is empty ✿ ready for your own quotes';
+      setTimeout(function () { note.textContent = ''; }, 2500);
+    });
+
+    document.getElementById('saveQuote').addEventListener('click', function () {
+      var t = document.getElementById('newQuote').value.trim();
+      var a = document.getElementById('newAuthor').value.trim();
+      if (!t) { note.className = 'note err'; note.textContent = 'Write a quote first ♡'; return; }
+      data.mine.unshift({ t: t, a: a || 'Anonymous' });
+      save(); renderList();
+      document.getElementById('newQuote').value = '';
+      document.getElementById('newAuthor').value = '';
+      note.className = 'note';
+      note.textContent = 'Saved ✿ (' + data.mine.length + ' in your jar)';
+      setTimeout(function () { note.textContent = ''; }, 2500);
+    });
+
+    // initial state: last quote waits on the back
+    setCardNo();
+    if (data.last && !pool().some(function (q) { return q.t === data.last.t; })) data.last = null;
+    if (data.last) show(data.last, false);
+    renderList();
+  })();
+</script>
+</body>
+</html>

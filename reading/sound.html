@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cozy sounds</title>
+<script>
+  // Tema: ?theme=dark o ?theme=light en el enlace; sin parámetro sigue el modo del sistema
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() { document.documentElement.dataset.theme = (p === 'dark' || p === 'light') ? p : (mq.matches ? 'dark' : 'light'); }
+    apply();
+    if (p !== 'dark' && p !== 'light' && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Plus+Jakarta+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vanilla: #FAF7F2;
+    --linen: #FFFFFF;
+    --bone: #FDFBF8;
+    --espresso: #2E2620;
+    --sage: #8A9A86;
+    --rose: #D9A5B3;
+    --muted: rgba(var(--ink-rgb), 0.45);
+    --ink-rgb: 46, 38, 32;
+    --shadow-rgb: 46, 38, 32;
+    --sage-rgb: 138, 154, 134;
+    --rose-rgb: 217, 165, 179;
+    --sage-tint: #EEF1EC;
+    --hover: #F2EEE7;
+    --latte: #C8B39B;
+  }
+  :root[data-theme="dark"] {
+    --vanilla: #26211D;
+    --linen: #322B26;
+    --bone: #201C19;
+    --linen-soft: #201C19;
+    --espresso: #EFE7DC;
+    --sage: #A3B49E;
+    --rose: #E2B3C0;
+    --ink-rgb: 239, 231, 220;
+    --shadow-rgb: 0, 0, 0;
+    --sage-rgb: 163, 180, 158;
+    --rose-rgb: 226, 179, 192;
+    --sage-tint: #2F352D;
+    --hover: #3A322C;
+    --latte: #A88F75;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: transparent; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--espresso);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: 100%; max-width: 340px; min-width: 260px;
+    height: 196px;
+    background: var(--bone);
+    border-radius: 20px;
+    box-shadow: 0 10px 34px rgba(var(--shadow-rgb), 0.08), 0 1px 3px rgba(var(--shadow-rgb), 0.04);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 11px;
+    overflow: hidden;
+  }
+  .title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic; font-size: 17px; font-weight: 500;
+    color: var(--espresso); opacity: 0.8;
+    line-height: 1; margin-bottom: 1px;
+  }
+  .title span { font-family: 'Plus Jakarta Sans', sans-serif; font-style: normal; font-size: 8px; letter-spacing: 0.3em; color: var(--sage); vertical-align: middle; margin: 0 6px; }
+
+  .play {
+    position: relative;
+    width: 66px; height: 66px;
+    border: none; border-radius: 50%;
+    background: var(--vanilla);
+    box-shadow: 0 6px 18px rgba(var(--shadow-rgb), 0.07), inset 0 0 0 1px rgba(var(--ink-rgb), 0.05);
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.6s ease, box-shadow 0.6s ease;
+  }
+  .play:active { transform: scale(0.95); }
+  .play svg { width: 32px; height: 32px; overflow: visible; }
+  .play .stroke { fill: none; stroke: var(--espresso); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; transition: stroke 0.6s ease; }
+  .play .drop { opacity: 0; }
+
+  .playing .play {
+    background: var(--sage-tint);
+    box-shadow: 0 0 0 7px rgba(var(--sage-rgb), 0.10), 0 8px 24px rgba(var(--sage-rgb), 0.35);
+  }
+  .playing .play .stroke { stroke: var(--sage); opacity: 1; }
+  .playing .play .drop { animation: fall 1.4s linear infinite; }
+  .playing .play .drop:nth-of-type(3) { animation-delay: 0.45s; }
+  .playing .play .drop:nth-of-type(4) { animation-delay: 0.9s; }
+  @keyframes fall {
+    0% { opacity: 0; transform: translateY(-2px); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(6px); }
+  }
+  .play.flash { animation: flash 0.9s ease-out; }
+  @keyframes flash {
+    0% { box-shadow: 0 0 0 7px rgba(var(--rose-rgb), 0.25), 0 0 30px rgba(var(--rose-rgb), 0.7); }
+  }
+
+  /* Capas: se encienden y apagan por separado */
+  .layers { display: flex; gap: 6px; }
+  .chip {
+    display: flex; align-items: center; gap: 5px;
+    border: none; cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font: inherit; font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+    padding: 5px 10px 5px 8px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(var(--ink-rgb), 0.08);
+    transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  }
+  .chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .chip:active { transform: scale(0.94); }
+  .chip.on { background: var(--sage-tint); color: var(--espresso); box-shadow: inset 0 0 0 1px rgba(var(--sage-rgb), 0.45); }
+  .chip.on svg { stroke: var(--sage); }
+
+  .vol {
+    -webkit-appearance: none; appearance: none;
+    width: 120px; height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--sage) var(--p, 60%), rgba(var(--ink-rgb), 0.10) var(--p, 60%));
+    outline: none; cursor: pointer;
+  }
+  .vol::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--linen);
+    box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.25);
+  }
+  .vol::-moz-range-thumb {
+    width: 12px; height: 12px; border: none; border-radius: 50%;
+    background: var(--linen);
+    box-shadow: 0 1px 4px rgba(var(--shadow-rgb), 0.25);
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="title"><span>✦</span>cozy sounds<span>✦</span></div>
+    <button class="play" id="play" type="button" aria-label="Play">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path class="stroke" d="M9.5 19.5h13a5 5 0 0 0 .6-9.96A7 7 0 0 0 9.6 11.6 4 4 0 0 0 9.5 19.5z"/>
+        <path class="stroke drop" d="M12 23v2.5"/>
+        <path class="stroke drop" d="M16.5 23v2.5"/>
+        <path class="stroke drop" d="M21 23v2.5"/>
+      </svg>
+    </button>
+    <div class="layers">
+      <button class="chip" type="button" data-layer="rain" aria-pressed="false">
+        <svg viewBox="0 0 16 16"><path d="M4 2.5v3M8 1.5v4M12 2.5v3M6 8v3M10 8v3M8 12.5v2"/></svg>rain
+      </button>
+      <button class="chip" type="button" data-layer="thunder" aria-pressed="false">
+        <svg viewBox="0 0 16 16"><path d="M9.5 1.5 4.5 9h3.5l-1.5 5.5 5-7.5H8z"/></svg>thunder
+      </button>
+      <button class="chip" type="button" data-layer="white" aria-pressed="false">
+        <svg viewBox="0 0 16 16"><path d="M1.5 8c1.1-2.5 2.2-2.5 3.25 0s2.15 2.5 3.25 0 2.15-2.5 3.25 0 2.15 2.5 3.25 0"/></svg>white noise
+      </button>
+    </div>
+    <input class="vol" id="vol" type="range" min="0" max="100" value="60" aria-label="Volume">
+  </div>
+
+<script>
+  const KEY = 'cozy-sound-v2';
+  const card = document.getElementById('card');
+  const playBtn = document.getElementById('play');
+  const vol = document.getElementById('vol');
+  const chips = [...document.querySelectorAll('[data-layer]')];
+
+  // Capas activas y volumen quedan guardados
+  let prefs = { volume: 60, layers: { rain: true, thunder: false, white: false } };
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s) prefs = { volume: s.volume ?? 60, layers: Object.assign(prefs.layers, s.layers) };
+  } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {} };
+  vol.value = prefs.volume;
+
+  // Nivel de cada capa cuando está encendida
+  const LEVEL = { rain: 1, thunder: 1, white: 0.32 };
+
+  let ctx = null, master = null, playing = false;
+  const layerGain = {};
+
+  function noiseBuffer(ac, seconds, kind) {
+    const len = ac.sampleRate * seconds;
+    const buf = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        if (kind === 'white') { d[i] = w * 0.5; continue; }
+        if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; continue; }
+        // rosa (Paul Kellet)
+        b0 = 0.99886 * b0 + w * 0.0555179;
+        b1 = 0.99332 * b1 + w * 0.0750759;
+        b2 = 0.96900 * b2 + w * 0.1538520;
+        b3 = 0.86650 * b3 + w * 0.3104856;
+        b4 = 0.55000 * b4 + w * 0.5329522;
+        b5 = -0.7616 * b5 - w * 0.0168980;
+        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+        b6 = w * 0.115926;
+      }
+    }
+    return buf;
+  }
+
+  let brown = null;
+
+  function build() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+
+    for (const name of ['rain', 'thunder', 'white']) {
+      layerGain[name] = ctx.createGain();
+      layerGain[name].gain.value = prefs.layers[name] ? LEVEL[name] : 0;
+      layerGain[name].connect(master);
+    }
+
+    // Lluvia: cortina de ruido rosa + rumor grave + gotitas sueltas
+    const pink = noiseBuffer(ctx, 6, 'pink');
+    const rain = ctx.createBufferSource();
+    rain.buffer = pink; rain.loop = true;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.4;
+    const curtain = ctx.createGain(); curtain.gain.value = 0.9;
+    rain.connect(hp).connect(lp).connect(curtain).connect(layerGain.rain);
+
+    const roof = ctx.createBufferSource();
+    roof.buffer = pink; roof.loop = true; roof.playbackRate.value = 0.5;
+    const lp2 = ctx.createBiquadFilter(); lp2.type = 'lowpass'; lp2.frequency.value = 420;
+    const roofGain = ctx.createGain(); roofGain.gain.value = 0.55;
+    roof.connect(lp2).connect(roofGain).connect(layerGain.rain);
+
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
+    const lfoDepth = ctx.createGain(); lfoDepth.gain.value = 0.18;
+    lfo.connect(lfoDepth).connect(curtain.gain);
+
+    // Ruido blanco: suavizado arriba para que no sea chillón
+    const white = ctx.createBufferSource();
+    white.buffer = noiseBuffer(ctx, 4, 'white'); white.loop = true;
+    const wlp = ctx.createBiquadFilter(); wlp.type = 'lowpass'; wlp.frequency.value = 7000;
+    white.connect(wlp).connect(layerGain.white);
+
+    brown = noiseBuffer(ctx, 8, 'brown');
+
+    rain.start(); roof.start(1.3); lfo.start(); white.start();
+    scheduleDrops();
+    scheduleThunder(4);
+  }
+
+  function scheduleDrops() {
+    if (!ctx) return;
+    if (playing && prefs.layers.rain) {
+      const t = ctx.currentTime + 0.02;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      const f = ctx.createBiquadFilter();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800 + Math.random() * 2200, t);
+      osc.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+      f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.2;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.025 + Math.random() * 0.03, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+      osc.connect(f).connect(g).connect(layerGain.rain);
+      osc.start(t); osc.stop(t + 0.1);
+    }
+    setTimeout(scheduleDrops, 60 + Math.random() * 380);
+  }
+
+  // Trueno: ruido café filtrado, con un chasquido inicial y una cola larga que rueda
+  function thunder() {
+    const t = ctx.currentTime + 0.05;
+    const near = Math.random() < 0.35;
+    const dur = 5 + Math.random() * 4;
+
+    const src = ctx.createBufferSource();
+    src.buffer = brown; src.loop = true;
+    src.playbackRate.value = 0.7 + Math.random() * 0.3;
+    const lpf = ctx.createBiquadFilter(); lpf.type = 'lowpass';
+    lpf.frequency.setValueAtTime(near ? 900 : 500, t);
+    lpf.frequency.exponentialRampToValueAtTime(140, t + dur);
+    const g = ctx.createGain();
+    const peak = near ? 1.1 : 0.7;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + (near ? 0.15 : 0.6));
+    // Segundo retumbo dentro de la misma cola
+    g.gain.linearRampToValueAtTime(peak * 0.45, t + 1.4);
+    g.gain.linearRampToValueAtTime(peak * 0.75, t + 2.1);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(lpf).connect(g).connect(layerGain.thunder);
+    src.start(t, Math.random() * 3); src.stop(t + dur + 0.1);
+
+    if (near) {
+      const crack = ctx.createBufferSource();
+      crack.buffer = brown;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 0.6;
+      const cg = ctx.createGain();
+      cg.gain.setValueAtTime(0, t);
+      cg.gain.linearRampToValueAtTime(0.5, t + 0.02);
+      cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      crack.connect(bp).connect(cg).connect(layerGain.thunder);
+      crack.start(t, Math.random() * 3); crack.stop(t + 0.6);
+    }
+
+    playBtn.classList.remove('flash'); void playBtn.offsetWidth; playBtn.classList.add('flash');
+  }
+
+  function scheduleThunder(firstDelay) {
+    const delay = firstDelay ?? (14 + Math.random() * 26);
+    setTimeout(() => {
+      if (playing && prefs.layers.thunder) thunder();
+      scheduleThunder();
+    }, delay * 1000);
+  }
+
+  const level = () => Math.pow(vol.value / 100, 1.6) * 0.9;
+
+  function setPlaying(on) {
+    playing = on;
+    const t = ctx.currentTime;
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(master.gain.value, t);
+    master.gain.linearRampToValueAtTime(on ? level() : 0, t + (on ? 1.6 : 1.0));
+    card.classList.toggle('playing', on);
+    playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
+  }
+
+  playBtn.addEventListener('click', async () => {
+    if (!ctx) build();
+    if (ctx.state === 'suspended') await ctx.resume();
+    // Si todo está apagado, enciende la lluvia para que suene algo
+    if (!playing && !Object.values(prefs.layers).some(Boolean)) toggleLayer('rain');
+    setPlaying(!playing);
+  });
+
+  function toggleLayer(name) {
+    prefs.layers[name] = !prefs.layers[name];
+    save(); paintChips();
+    if (ctx) layerGain[name].gain.setTargetAtTime(prefs.layers[name] ? LEVEL[name] : 0, ctx.currentTime, 0.35);
+    if (ctx && name === 'thunder' && prefs.layers.thunder && playing) setTimeout(thunder, 1500);
+  }
+  chips.forEach(c => c.addEventListener('click', () => toggleLayer(c.dataset.layer)));
+
+  function paintChips() {
+    chips.forEach(c => {
+      const on = !!prefs.layers[c.dataset.layer];
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on);
+    });
+  }
+
+  function paintSlider() { vol.style.setProperty('--p', vol.value + '%'); }
+  vol.addEventListener('input', () => {
+    paintSlider();
+    prefs.volume = Number(vol.value); save();
+    if (ctx && playing) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.1);
+  });
+  paintSlider(); paintChips();
+</script>
+</body>
+</html>
