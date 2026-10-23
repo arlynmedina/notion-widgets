@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work hours</title>
+<script>
+  // Theme: add ?theme=light or ?theme=dark to the link to fix it; without it the widget follows the system setting
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var fixed = p === 'light' || p === 'dark';
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      document.documentElement.dataset.theme = fixed ? p : (mq.matches ? 'dark' : 'light');
+      window.dispatchEvent(new Event('themechange'));
+    }
+    apply();
+    if (!fixed && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #FDFBF7;
+    --ink: #1E1E1E;
+    --ink-rgb: 30, 30, 30;
+    --muted: rgba(var(--ink-rgb), 0.5);
+    --faint: rgba(var(--ink-rgb), 0.09);
+    --emerald: #2D5A43;
+    --emerald-rgb: 45, 90, 67;
+    --emerald-hi: #3E7A5B;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.09);
+    --solid: #2D5A43;
+    --solid-hover: #24493A;
+    --on-solid: #FDFBF7;
+    --gold: #C5A880;
+    --gold-ink: #9C7E52;
+    --gold-soft: rgba(197, 168, 128, 0.16);
+    --warn: #A0703F;
+    --sage: #8FA996;
+    --latte: #C4A484;
+    --sand: #E6D8C1;
+    --sand-ink: #7A6142;
+    --grey: #ECE8E1;
+    --glass: rgba(255, 255, 255, 0.55);
+    --shine: rgba(255, 255, 255, 0.9);
+    --liq-top: #3B7257;
+    --liq-bot: #2D5A43;
+    --liq-back: #5E8C73;
+  }
+  :root[data-theme="dark"] {
+    --linen: #1B1A18;
+    --ink: #EDE8DF;
+    --ink-rgb: 237, 232, 223;
+    --muted: rgba(var(--ink-rgb), 0.55);
+    --faint: rgba(var(--ink-rgb), 0.12);
+    --emerald: #74AA8C;
+    --emerald-rgb: 116, 170, 140;
+    --emerald-hi: #8CBEA2;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.12);
+    --solid: #3A7457;
+    --solid-hover: #458566;
+    --on-solid: #F6F2EA;
+    --gold: #C5A880;
+    --gold-ink: #D8BF97;
+    --gold-soft: rgba(197, 168, 128, 0.14);
+    --warn: #DDA06A;
+    --sage: #7E9C88;
+    --latte: #B48F69;
+    --sand: #8A7B62;
+    --sand-ink: #F3EADB;
+    --grey: #2C2A27;
+    --glass: rgba(255, 255, 255, 0.04);
+    --shine: rgba(255, 255, 255, 0.14);
+    --liq-top: #4F8A6C;
+    --liq-bot: #2F5E47;
+    --liq-back: #2C4F3E;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--linen); }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative;
+    width: 100%; max-width: 360px;
+    height: 100%; max-height: 220px;
+    padding: 12px 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px solid var(--faint);
+    border-radius: 18px;
+    background: var(--linen);
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .title em { font-style: italic; color: var(--emerald); }
+  .cur {
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 9.5px/1 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.08em;
+    color: var(--muted); padding: 5px 9px; cursor: pointer; outline: 0;
+    transition: border-color .2s, color .2s;
+  }
+  .cur:hover, .cur:focus-visible { border-color: var(--gold); color: var(--ink); }
+  .lbl {
+    font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; white-space: nowrap;
+  }
+  .field {
+    display: flex; align-items: baseline; gap: 3px;
+    border-bottom: 1px solid var(--faint); padding: 2px 0 3px;
+    transition: border-color .2s;
+  }
+  .field:focus-within { border-color: var(--emerald); }
+  .field .pre { font-size: 12px; color: var(--muted); }
+  .field input {
+    border: 0; background: transparent; outline: 0; width: 100%; min-width: 0;
+    font: 600 14px 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .field input::placeholder { color: rgba(var(--ink-rgb), 0.25); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .num { font-variant-numeric: tabular-nums; }
+  .btn {
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 11px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    padding: 7px 10px; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .1s;
+  }
+  .btn:hover { border-color: var(--gold); background: var(--gold-soft); }
+  .btn:active { transform: scale(0.96); }
+  .btn.solid { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .btn.solid:hover { background: var(--solid-hover); border-color: var(--solid-hover); }
+
+  .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .inputs .field input { font-size: 14px; }
+  .result {
+    flex: 1; min-height: 0; border-radius: 14px; padding: 10px 14px;
+    background: linear-gradient(135deg, var(--emerald-soft), var(--gold-soft));
+    border: 1px solid rgba(197, 168, 128, .35);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .pre-line { font-family: 'Playfair Display', serif; font-style: italic; font-size: 12.5px; color: rgba(var(--ink-rgb),.7); }
+  .hours { display: flex; align-items: baseline; gap: 6px; margin: 1px 0 2px; }
+  .hours b { font-size: 36px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; color: var(--emerald); transition: color .3s; }
+  .hours span { font-family: 'Playfair Display', serif; font-size: 14px; }
+  .note { font-size: 10px; color: var(--muted); }
+  .clocks { display: flex; justify-content: space-between; gap: 3px; margin-top: 6px; height: 7px; }
+  .clocks i { width: 7px; height: 7px; border-radius: 50%; background: rgba(var(--ink-rgb),.1); position: relative; overflow: hidden; flex: none; }
+  .clocks i::before { content: ''; position: absolute; inset: 0; background: var(--emerald); transform-origin: left; transform: scaleX(var(--f, 0)); transition: transform .4s; }
+  .result.heavy .hours b { color: var(--gold-ink); }
+  .result.heavy .clocks i::before { background: var(--gold); }
+
+</style>
+</head>
+<body>
+<main class="card">
+  <header class="head">
+    <h1 class="title">Cost in <em>hours</em></h1>
+    <select class="cur" id="cur" aria-label="Currency">
+      <option value="USD">$ USD</option>
+      <option value="MXN">$ MXN</option>
+      <option value="EUR">€ EUR</option>
+    </select>
+  </header>
+
+  <div class="inputs">
+    <div><div class="lbl">Your hourly rate</div><label class="field"><span class="pre" data-sym>$</span><input id="rate" type="number" inputmode="decimal" min="0" step="any" placeholder="25" aria-label="Hourly rate"></label></div>
+    <div><div class="lbl">Item price</div><label class="field"><span class="pre" data-sym>$</span><input id="price" type="number" inputmode="decimal" min="0" step="any" placeholder="120" aria-label="Item price"></label></div>
+  </div>
+  <div class="result" id="result">
+    <div class="pre-line">This will cost you</div>
+    <div class="hours"><b class="num" id="hrs">0</b><span id="unit">hours of work</span></div>
+    <div class="note num" id="note">Enter your rate and the price to see it.</div>
+    <div class="clocks" id="clocks" aria-hidden="true"></div>
+  </div>
+
+</main>
+<script>
+  // Shared helpers: safe storage, currency and formatting
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var SYM = { USD: '$', MXN: '$', EUR: '€' };
+  var cur = store.get('fw-currency', 'USD');
+  if (!SYM[cur]) cur = 'USD';
+  var curSel = document.getElementById('cur');
+  curSel.value = cur;
+  function num(v) { var n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) && n > 0 ? n : 0; }
+  function money(n, dec) {
+    var d = dec == null ? (Math.round(n) === n ? 0 : 2) : dec;
+    return SYM[cur] + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function syncSymbols() {
+    document.querySelectorAll('[data-sym]').forEach(function (el) { el.textContent = SYM[cur]; });
+  }
+  function onCurrency(fn) {
+    curSel.addEventListener('change', function () { var prev = cur; cur = curSel.value; store.set('fw-currency', cur); syncSymbols(); fn(prev); });
+    // If another widget changes the currency in the same browser, this one follows
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fw-currency') { var prev = cur; cur = store.get('fw-currency', 'USD'); curSel.value = cur; syncSymbols(); fn(prev); }
+    });
+    syncSymbols();
+  }
+
+  var KEY = 'fw-work-hours', DOTS = 24;
+  var st = store.get(KEY, { rate: '', price: '' });
+  var rateIn = document.getElementById('rate'), priceIn = document.getElementById('price');
+  var clocks = document.getElementById('clocks');
+  rateIn.value = st.rate; priceIn.value = st.price;
+  for (var i = 0; i < DOTS; i++) clocks.appendChild(document.createElement('i'));
+
+  function render() {
+    var rate = num(rateIn.value), price = num(priceIn.value);
+    var h = rate > 0 ? price / rate : 0;
+    var shown = h >= 100 ? Math.round(h).toLocaleString('en-US') : h.toFixed(1);
+    document.getElementById('hrs').textContent = shown;
+    document.getElementById('unit').textContent = shown === '1.0' ? 'hour of work' : 'hours of work';
+    var note = 'Enter your rate and the price to see it.';
+    if (rate > 0 && price > 0) {
+      var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+      if (mm === 60) { hh++; mm = 0; }
+      var exact = (hh ? hh + ' h ' : '') + (mm || !hh ? mm + ' min' : '');
+      note = '≈ ' + exact.trim() + ' · ' + (h / 8).toFixed(1) + ' eight-hour workdays';
+    }
+    document.getElementById('note').textContent = note;
+    // Each dot is one hour; past 24 hours each dot is an 8-hour workday
+    var unit = h > DOTS ? 8 : 1;
+    clocks.querySelectorAll('i').forEach(function (d, i) {
+      d.style.setProperty('--f', Math.max(0, Math.min(1, h / unit - i)));
+    });
+    clocks.title = unit === 1 ? '1 dot = 1 hour' : '1 dot = 1 eight-hour workday';
+    document.getElementById('result').classList.toggle('heavy', h >= 8);
+  }
+
+  [rateIn, priceIn].forEach(function (el) {
+    el.addEventListener('input', function () { store.set(KEY, { rate: rateIn.value, price: priceIn.value }); render(); });
+  });
+  onCurrency(render);
+  render();
+
+</script>
+</body>
+</html>

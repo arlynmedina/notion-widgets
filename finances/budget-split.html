@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget split</title>
+<script>
+  // Theme: add ?theme=light or ?theme=dark to the link to fix it; without it the widget follows the system setting
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var fixed = p === 'light' || p === 'dark';
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      document.documentElement.dataset.theme = fixed ? p : (mq.matches ? 'dark' : 'light');
+      window.dispatchEvent(new Event('themechange'));
+    }
+    apply();
+    if (!fixed && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #FDFBF7;
+    --ink: #1E1E1E;
+    --ink-rgb: 30, 30, 30;
+    --muted: rgba(var(--ink-rgb), 0.5);
+    --faint: rgba(var(--ink-rgb), 0.09);
+    --emerald: #2D5A43;
+    --emerald-rgb: 45, 90, 67;
+    --emerald-hi: #3E7A5B;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.09);
+    --solid: #2D5A43;
+    --solid-hover: #24493A;
+    --on-solid: #FDFBF7;
+    --gold: #C5A880;
+    --gold-ink: #9C7E52;
+    --gold-soft: rgba(197, 168, 128, 0.16);
+    --warn: #A0703F;
+    --sage: #8FA996;
+    --latte: #C4A484;
+    --sand: #E6D8C1;
+    --sand-ink: #7A6142;
+    --grey: #ECE8E1;
+    --glass: rgba(255, 255, 255, 0.55);
+    --shine: rgba(255, 255, 255, 0.9);
+    --liq-top: #3B7257;
+    --liq-bot: #2D5A43;
+    --liq-back: #5E8C73;
+  }
+  :root[data-theme="dark"] {
+    --linen: #1B1A18;
+    --ink: #EDE8DF;
+    --ink-rgb: 237, 232, 223;
+    --muted: rgba(var(--ink-rgb), 0.55);
+    --faint: rgba(var(--ink-rgb), 0.12);
+    --emerald: #74AA8C;
+    --emerald-rgb: 116, 170, 140;
+    --emerald-hi: #8CBEA2;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.12);
+    --solid: #3A7457;
+    --solid-hover: #458566;
+    --on-solid: #F6F2EA;
+    --gold: #C5A880;
+    --gold-ink: #D8BF97;
+    --gold-soft: rgba(197, 168, 128, 0.14);
+    --warn: #DDA06A;
+    --sage: #7E9C88;
+    --latte: #B48F69;
+    --sand: #8A7B62;
+    --sand-ink: #F3EADB;
+    --grey: #2C2A27;
+    --glass: rgba(255, 255, 255, 0.04);
+    --shine: rgba(255, 255, 255, 0.14);
+    --liq-top: #4F8A6C;
+    --liq-bot: #2F5E47;
+    --liq-back: #2C4F3E;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--linen); }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative;
+    width: 100%; max-width: 360px;
+    height: 100%; max-height: 220px;
+    padding: 12px 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px solid var(--faint);
+    border-radius: 18px;
+    background: var(--linen);
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .title em { font-style: italic; color: var(--emerald); }
+  .cur {
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 9.5px/1 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.08em;
+    color: var(--muted); padding: 5px 9px; cursor: pointer; outline: 0;
+    transition: border-color .2s, color .2s;
+  }
+  .cur:hover, .cur:focus-visible { border-color: var(--gold); color: var(--ink); }
+  .lbl {
+    font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; white-space: nowrap;
+  }
+  .field {
+    display: flex; align-items: baseline; gap: 3px;
+    border-bottom: 1px solid var(--faint); padding: 2px 0 3px;
+    transition: border-color .2s;
+  }
+  .field:focus-within { border-color: var(--emerald); }
+  .field .pre { font-size: 12px; color: var(--muted); }
+  .field input {
+    border: 0; background: transparent; outline: 0; width: 100%; min-width: 0;
+    font: 600 14px 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .field input::placeholder { color: rgba(var(--ink-rgb), 0.25); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .num { font-variant-numeric: tabular-nums; }
+  .btn {
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 11px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    padding: 7px 10px; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .1s;
+  }
+  .btn:hover { border-color: var(--gold); background: var(--gold-soft); }
+  .btn:active { transform: scale(0.96); }
+  .btn.solid { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .btn.solid:hover { background: var(--solid-hover); border-color: var(--solid-hover); }
+
+  .income { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .income .field { flex: 1; max-width: 170px; }
+  .income .field input { font-size: 17px; }
+  .income .hint { font-size: 10px; color: var(--muted); padding-bottom: 5px; text-align: right; white-space: nowrap; }
+  .income .hint.warn { color: var(--warn); font-weight: 600; }
+  .income .hint button { border: 0; background: none; font: inherit; font-weight: 500; color: var(--gold); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; margin-left: 4px; }
+  .main { flex: 1; display: flex; align-items: center; gap: 16px; min-height: 0; }
+  .ring { width: 104px; height: 104px; flex: none; position: relative; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray .7s cubic-bezier(.2,.8,.2,1), stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1); }
+  .ring .track { stroke: var(--grey); stroke-width: 7; }
+  .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .center b { font-family: 'Playfair Display', serif; font-weight: 500; font-size: 22px; letter-spacing: -0.02em; }
+  .ring .center span { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: 1px; }
+  .legend { flex: 1; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .row { display: grid; grid-template-columns: 8px 1fr auto; align-items: center; column-gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .name { font-size: 11.5px; font-weight: 500; display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+  .pct { display: inline-flex; align-items: baseline; font-size: 9.5px; color: var(--muted); font-weight: 600; }
+  .pct input {
+    width: 22px; border: 0; border-bottom: 1px dashed rgba(var(--ink-rgb),.25); background: transparent; outline: 0;
+    font: 600 9.5px 'Plus Jakarta Sans', sans-serif; color: var(--muted); text-align: right; padding: 0;
+    transition: border-color .2s, color .2s;
+  }
+  .pct input:hover, .pct input:focus { border-bottom: 1px solid var(--emerald); color: var(--ink); }
+  .amt { font-size: 13px; font-weight: 700; text-align: right; }
+  .row .bar { grid-column: 2 / 4; height: 3px; border-radius: 3px; background: var(--grey); margin-top: 4px; overflow: hidden; }
+  .row .bar i { display: block; height: 100%; border-radius: 3px; transform-origin: left; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+
+</style>
+</head>
+<body>
+<main class="card">
+  <header class="head">
+    <h1 class="title">Budget <em>split</em></h1>
+    <select class="cur" id="cur" aria-label="Currency">
+      <option value="USD">$ USD</option>
+      <option value="MXN">$ MXN</option>
+      <option value="EUR">€ EUR</option>
+    </select>
+  </header>
+
+  <div class="income">
+    <div>
+      <div class="lbl">Monthly income</div>
+      <label class="field"><span class="pre" data-sym>$</span><input id="income" type="number" inputmode="decimal" min="0" step="any" placeholder="0" aria-label="Monthly income"></label>
+    </div>
+    <span class="hint" id="hint"></span>
+  </div>
+  <div class="main">
+    <div class="ring">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="42"></circle>
+        <circle id="s0" cx="50" cy="50" r="42" stroke="var(--sage)"></circle>
+        <circle id="s1" cx="50" cy="50" r="42" stroke="var(--latte)"></circle>
+        <circle id="s2" cx="50" cy="50" r="42" stroke="var(--sand)"></circle>
+      </svg>
+      <div class="center"><b id="saveTotal">20%</b><span>to savings</span></div>
+    </div>
+    <div class="legend">
+      <div class="row"><span class="dot" style="background:var(--sage)"></span><span class="name">Needs<label class="pct"><input id="p0" type="number" inputmode="numeric" min="0" max="100" aria-label="Needs percentage">%</label></span><span class="amt num" id="a0">$0</span><div class="bar"><i id="b0" style="background:var(--sage)"></i></div></div>
+      <div class="row"><span class="dot" style="background:var(--latte)"></span><span class="name">Wants<label class="pct"><input id="p1" type="number" inputmode="numeric" min="0" max="100" aria-label="Wants percentage">%</label></span><span class="amt num" id="a1">$0</span><div class="bar"><i id="b1" style="background:var(--latte)"></i></div></div>
+      <div class="row"><span class="dot" style="background:var(--sand)"></span><span class="name">Savings<label class="pct"><input id="p2" type="number" inputmode="numeric" min="0" max="100" aria-label="Savings percentage">%</label></span><span class="amt num" id="a2">$0</span><div class="bar"><i id="b2" style="background:var(--sand)"></i></div></div>
+    </div>
+  </div>
+
+</main>
+<script>
+  // Shared helpers: safe storage, currency and formatting
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var SYM = { USD: '$', MXN: '$', EUR: '€' };
+  var cur = store.get('fw-currency', 'USD');
+  if (!SYM[cur]) cur = 'USD';
+  var curSel = document.getElementById('cur');
+  curSel.value = cur;
+  function num(v) { var n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) && n > 0 ? n : 0; }
+  function money(n, dec) {
+    var d = dec == null ? (Math.round(n) === n ? 0 : 2) : dec;
+    return SYM[cur] + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function syncSymbols() {
+    document.querySelectorAll('[data-sym]').forEach(function (el) { el.textContent = SYM[cur]; });
+  }
+  function onCurrency(fn) {
+    curSel.addEventListener('change', function () { var prev = cur; cur = curSel.value; store.set('fw-currency', cur); syncSymbols(); fn(prev); });
+    // If another widget changes the currency in the same browser, this one follows
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fw-currency') { var prev = cur; cur = store.get('fw-currency', 'USD'); curSel.value = cur; syncSymbols(); fn(prev); }
+    });
+    syncSymbols();
+  }
+
+  var KEY = 'fw-budget-split';
+  var DEFAULT = [50, 30, 20];
+  var C = 2 * Math.PI * 42, GAP = 6;
+  var input = document.getElementById('income');
+  var pIn = [0, 1, 2].map(function (i) { return document.getElementById('p' + i); });
+  var st = store.get(KEY, {});
+  input.value = st.income || '';
+  var split = Array.isArray(st.split) && st.split.length === 3 ? st.split : DEFAULT.slice();
+  pIn.forEach(function (el, i) { el.value = split[i]; });
+
+  function save() { store.set(KEY, { income: input.value, split: split }); }
+  function pct(v) { var n = Math.round(parseFloat(v)); return isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; }
+
+  function render() {
+    var income = num(input.value);
+    var sum = split[0] + split[1] + split[2];
+    var scale = sum > 100 ? 100 / sum : 1;
+    var maxP = Math.max(split[0], split[1], split[2]) || 1;
+    var start = 0;
+    split.forEach(function (p, i) {
+      var f = p / 100;
+      var seg = document.getElementById('s' + i);
+      var len = income > 0 && p > 0 ? Math.max(C * f * scale - GAP, 0.01) : 0;
+      seg.style.strokeDasharray = len + ' ' + C;
+      seg.style.strokeDashoffset = -(start + GAP / 2);
+      start += C * f * scale;
+      document.getElementById('a' + i).textContent = money(Math.round(income * f * 100) / 100);
+      document.getElementById('b' + i).style.transform = 'scaleX(' + (income > 0 ? p / maxP : 0) + ')';
+    });
+    var t = income > 0 ? money(Math.round(income * split[2] / 100), 0) : split[2] + '%';
+    var el = document.getElementById('saveTotal');
+    el.textContent = t;
+    el.style.fontSize = t.length > 8 ? '14px' : t.length > 6 ? '17px' : '22px';
+
+    var hint = document.getElementById('hint');
+    var isDefault = split.join() === DEFAULT.join();
+    hint.classList.toggle('warn', sum !== 100);
+    hint.innerHTML = sum !== 100
+      ? 'Total ' + sum + '% · aim for 100%'
+      : split.join(' · ') + ' rule' + (isDefault ? '' : '<button id="reset">reset</button>');
+    var r = document.getElementById('reset');
+    if (r) r.onclick = function () { split = DEFAULT.slice(); pIn.forEach(function (e, i) { e.value = split[i]; }); save(); render(); };
+  }
+
+  input.addEventListener('input', function () { save(); render(); });
+  pIn.forEach(function (el, i) {
+    el.addEventListener('input', function () { split[i] = pct(el.value); save(); render(); });
+    el.addEventListener('blur', function () { el.value = split[i]; });
+  });
+  onCurrency(render);
+  render();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compound interest</title>
+<script>
+  // Theme: add ?theme=light or ?theme=dark to the link to fix it; without it the widget follows the system setting
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var fixed = p === 'light' || p === 'dark';
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      document.documentElement.dataset.theme = fixed ? p : (mq.matches ? 'dark' : 'light');
+      window.dispatchEvent(new Event('themechange'));
+    }
+    apply();
+    if (!fixed && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #FDFBF7;
+    --ink: #1E1E1E;
+    --ink-rgb: 30, 30, 30;
+    --muted: rgba(var(--ink-rgb), 0.5);
+    --faint: rgba(var(--ink-rgb), 0.09);
+    --emerald: #2D5A43;
+    --emerald-rgb: 45, 90, 67;
+    --emerald-hi: #3E7A5B;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.09);
+    --solid: #2D5A43;
+    --solid-hover: #24493A;
+    --on-solid: #FDFBF7;
+    --gold: #C5A880;
+    --gold-ink: #9C7E52;
+    --gold-soft: rgba(197, 168, 128, 0.16);
+    --warn: #A0703F;
+    --sage: #8FA996;
+    --latte: #C4A484;
+    --sand: #E6D8C1;
+    --sand-ink: #7A6142;
+    --grey: #ECE8E1;
+    --glass: rgba(255, 255, 255, 0.55);
+    --shine: rgba(255, 255, 255, 0.9);
+    --liq-top: #3B7257;
+    --liq-bot: #2D5A43;
+    --liq-back: #5E8C73;
+  }
+  :root[data-theme="dark"] {
+    --linen: #1B1A18;
+    --ink: #EDE8DF;
+    --ink-rgb: 237, 232, 223;
+    --muted: rgba(var(--ink-rgb), 0.55);
+    --faint: rgba(var(--ink-rgb), 0.12);
+    --emerald: #74AA8C;
+    --emerald-rgb: 116, 170, 140;
+    --emerald-hi: #8CBEA2;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.12);
+    --solid: #3A7457;
+    --solid-hover: #458566;
+    --on-solid: #F6F2EA;
+    --gold: #C5A880;
+    --gold-ink: #D8BF97;
+    --gold-soft: rgba(197, 168, 128, 0.14);
+    --warn: #DDA06A;
+    --sage: #7E9C88;
+    --latte: #B48F69;
+    --sand: #8A7B62;
+    --sand-ink: #F3EADB;
+    --grey: #2C2A27;
+    --glass: rgba(255, 255, 255, 0.04);
+    --shine: rgba(255, 255, 255, 0.14);
+    --liq-top: #4F8A6C;
+    --liq-bot: #2F5E47;
+    --liq-back: #2C4F3E;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--linen); }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative;
+    width: 100%; max-width: 360px;
+    height: 100%; max-height: 220px;
+    padding: 12px 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px solid var(--faint);
+    border-radius: 18px;
+    background: var(--linen);
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .title em { font-style: italic; color: var(--emerald); }
+  .cur {
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 9.5px/1 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.08em;
+    color: var(--muted); padding: 5px 9px; cursor: pointer; outline: 0;
+    transition: border-color .2s, color .2s;
+  }
+  .cur:hover, .cur:focus-visible { border-color: var(--gold); color: var(--ink); }
+  .lbl {
+    font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; white-space: nowrap;
+  }
+  .field {
+    display: flex; align-items: baseline; gap: 3px;
+    border-bottom: 1px solid var(--faint); padding: 2px 0 3px;
+    transition: border-color .2s;
+  }
+  .field:focus-within { border-color: var(--emerald); }
+  .field .pre { font-size: 12px; color: var(--muted); }
+  .field input {
+    border: 0; background: transparent; outline: 0; width: 100%; min-width: 0;
+    font: 600 14px 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .field input::placeholder { color: rgba(var(--ink-rgb), 0.25); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .num { font-variant-numeric: tabular-nums; }
+  .btn {
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 11px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    padding: 7px 10px; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .1s;
+  }
+  .btn:hover { border-color: var(--gold); background: var(--gold-soft); }
+  .btn:active { transform: scale(0.96); }
+  .btn.solid { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .btn.solid:hover { background: var(--solid-hover); border-color: var(--solid-hover); }
+
+  .card { gap: 8px; }
+  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sl .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .sl .val { display: inline-flex; align-items: baseline; gap: 1px; font-size: 12.5px; font-weight: 700; }
+  .sl .val input {
+    width: 3ch; border: 0; border-bottom: 1px dashed transparent; background: transparent; outline: 0; padding: 0;
+    font: 700 12.5px 'Plus Jakarta Sans', sans-serif; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums;
+    transition: border-color .2s;
+  }
+  .sl .val:hover input, .sl .val input:focus { border-bottom-color: var(--emerald); }
+  .sl .val small { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 3px; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 14px; background: transparent; cursor: pointer; outline: 0;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 2px; border-radius: 2px;
+    background: linear-gradient(to right, var(--emerald) var(--fill, 0%), var(--grey) var(--fill, 0%));
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px; margin-top: -5.5px; border-radius: 50%;
+    background: var(--linen); border: 2px solid var(--emerald); box-shadow: 0 1px 4px rgba(var(--emerald-rgb), .25);
+    transition: transform .15s;
+  }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.15); }
+  input[type=range]::-moz-range-track { height: 2px; border-radius: 2px; background: var(--grey); }
+  input[type=range]::-moz-range-progress { height: 2px; border-radius: 2px; background: var(--emerald); }
+  input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--linen); border: 2px solid var(--emerald); }
+  .chart { flex: 1; position: relative; min-height: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .tag { position: absolute; right: 0; top: 0; font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .tag i { display: inline-block; width: 10px; height: 0; border-top: 1.5px dashed var(--gold); vertical-align: middle; margin: 0 3px 0 6px; }
+  .tag i.solid { border-top-style: solid; border-color: var(--emerald); }
+  .out { font-family: 'Playfair Display', serif; font-size: 13.5px; line-height: 1.3; }
+  .out b { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: var(--emerald); font-size: 15px; letter-spacing: -0.02em; }
+  .out span { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10.5px; color: var(--muted); }
+  .out span b { font-size: 10.5px; color: var(--gold-ink); letter-spacing: 0; }
+
+</style>
+</head>
+<body>
+<main class="card">
+  <header class="head">
+    <h1 class="title">Compound <em>interest</em></h1>
+    <select class="cur" id="cur" aria-label="Currency">
+      <option value="USD">$ USD</option>
+      <option value="MXN">$ MXN</option>
+      <option value="EUR">€ EUR</option>
+    </select>
+  </header>
+
+  <div class="sliders">
+    <div class="sl">
+      <div class="top"><span class="lbl">Monthly deposit</span><label class="val num"><span data-sym>$</span><input id="depIn" type="number" inputmode="decimal" min="0" step="any" aria-label="Monthly deposit amount"></label></div>
+      <input type="range" id="dep" min="50" max="1000" step="10" value="200" aria-label="Monthly deposit">
+    </div>
+    <div class="sl">
+      <div class="top"><span class="lbl">Years</span><label class="val num"><input id="yrIn" type="number" inputmode="numeric" min="1" max="60" step="1" aria-label="Number of years"><small id="yrUnit">years</small></label></div>
+      <input type="range" id="yr" min="1" max="30" step="1" value="10" aria-label="Years">
+    </div>
+  </div>
+  <div class="chart">
+    <canvas id="cv" aria-hidden="true"></canvas>
+    <div class="tag"><i class="solid"></i>Total<i></i>Deposited · 8% / yr</div>
+  </div>
+  <p class="out" id="out"></p>
+
+</main>
+<script>
+  // Shared helpers: safe storage, currency and formatting
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var SYM = { USD: '$', MXN: '$', EUR: '€' };
+  var cur = store.get('fw-currency', 'USD');
+  if (!SYM[cur]) cur = 'USD';
+  var curSel = document.getElementById('cur');
+  curSel.value = cur;
+  function num(v) { var n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) && n > 0 ? n : 0; }
+  function money(n, dec) {
+    var d = dec == null ? (Math.round(n) === n ? 0 : 2) : dec;
+    return SYM[cur] + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function syncSymbols() {
+    document.querySelectorAll('[data-sym]').forEach(function (el) { el.textContent = SYM[cur]; });
+  }
+  function onCurrency(fn) {
+    curSel.addEventListener('change', function () { var prev = cur; cur = curSel.value; store.set('fw-currency', cur); syncSymbols(); fn(prev); });
+    // If another widget changes the currency in the same browser, this one follows
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fw-currency') { var prev = cur; cur = store.get('fw-currency', 'USD'); curSel.value = cur; syncSymbols(); fn(prev); }
+    });
+    syncSymbols();
+  }
+
+  var KEY = 'fw-compound-calc', RATE = 0.08;
+  var dep = document.getElementById('dep'), yr = document.getElementById('yr');
+  var depIn = document.getElementById('depIn'), yrIn = document.getElementById('yrIn');
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  // Slider ranges follow the currency; the typed fields accept any amount
+  var RANGE = { USD: [50, 1000, 10], EUR: [50, 1000, 10], MXN: [500, 20000, 100] };
+  var st = store.get(KEY, {});
+  var P = num(st.dep) || 200, years = Math.round(num(st.yr)) || 10;
+
+  // Size the typed fields to their content so the symbol sits next to the number
+  var meas = document.createElement('canvas').getContext('2d');
+  function fit(el) {
+    meas.font = '700 12.5px "Plus Jakarta Sans", sans-serif';
+    el.style.width = Math.ceil(meas.measureText(String(el.value || '0')).width + 3) + 'px';
+  }
+  function save() { store.set(KEY, { dep: P, yr: years }); }
+  function setRange() {
+    var r = RANGE[cur];
+    dep.min = r[0]; dep.max = r[1]; dep.step = r[2];
+  }
+
+  function series(P, years) {
+    var r = RATE / 12, bal = 0, pts = [{ v: 0, c: 0 }];
+    for (var m = 1; m <= years * 12; m++) {
+      bal = bal * (1 + r) + P;
+      pts.push({ v: bal, c: P * m });
+    }
+    return pts;
+  }
+
+  function fill(el) { el.style.setProperty('--fill', ((el.value - el.min) / (el.max - el.min) * 100) + '%'); }
+
+  function draw(pts) {
+    var css = getComputedStyle(document.documentElement);
+    function v(name) { return css.getPropertyValue(name).trim(); }
+    var EM = v('--emerald'), EMRGB = v('--emerald-rgb'), GOLD = v('--gold'), BG = v('--linen'), INK = v('--ink-rgb');
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    cv.width = w * dpr; cv.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var top = 24, bottom = h - 2, max = pts[pts.length - 1].v || 1, n = pts.length - 1;
+    function X(i) { return 2 + (i / n) * (w - 6); }
+    function Y(v) { return bottom - (v / max) * (bottom - top); }
+
+    // Baseline
+    ctx.strokeStyle = 'rgba(' + INK + ',0.1)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, bottom + .5); ctx.lineTo(w, bottom + .5); ctx.stroke();
+
+    // Area under the projection
+    var g = ctx.createLinearGradient(0, top, 0, bottom);
+    g.addColorStop(0, 'rgba(' + EMRGB + ',0.18)'); g.addColorStop(1, 'rgba(' + EMRGB + ',0)');
+    ctx.beginPath(); ctx.moveTo(X(0), bottom);
+    pts.forEach(function (p, i) { ctx.lineTo(X(i), Y(p.v)); });
+    ctx.lineTo(X(n), bottom); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+
+    // Deposited (gold, dashed)
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = GOLD; ctx.lineWidth = 1.2;
+    ctx.beginPath(); pts.forEach(function (p, i) { i ? ctx.lineTo(X(i), Y(p.c)) : ctx.moveTo(X(i), Y(p.c)); }); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Total projection (thin emerald)
+    ctx.strokeStyle = EM; ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+    ctx.beginPath(); pts.forEach(function (p, i) { i ? ctx.lineTo(X(i), Y(p.v)) : ctx.moveTo(X(i), Y(p.v)); }); ctx.stroke();
+
+    // End point
+    ctx.fillStyle = BG; ctx.strokeStyle = EM; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(X(n), Y(max), 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+
+  function render() {
+    dep.value = Math.max(+dep.min, Math.min(+dep.max, P));
+    yr.value = Math.min(30, years);
+    if (document.activeElement !== depIn) depIn.value = P;
+    if (document.activeElement !== yrIn) yrIn.value = years;
+    fit(depIn); fit(yrIn);
+    var pts = series(P, years), last = pts[pts.length - 1];
+    var interest = last.v - last.c;
+    fill(dep); fill(yr);
+    document.getElementById('yrUnit').textContent = years === 1 ? 'year' : 'years';
+    document.getElementById('out').innerHTML =
+      'In ' + years + (years === 1 ? ' year' : ' years') + ' you’ll have <b class="num">' + money(Math.round(last.v), 0) + '</b> ' +
+      '<span>(interest earned: <b class="num">' + money(Math.round(interest), 0) + '</b>)</span>';
+    draw(pts);
+  }
+
+  dep.addEventListener('input', function () { P = Number(dep.value); save(); render(); });
+  yr.addEventListener('input', function () { years = Number(yr.value); save(); render(); });
+  depIn.addEventListener('input', function () { fit(depIn); if (num(depIn.value)) { P = num(depIn.value); save(); render(); } });
+  yrIn.addEventListener('input', function () { fit(yrIn); var v = Math.round(num(yrIn.value)); if (v) { years = Math.min(v, 60); save(); render(); } });
+  [depIn, yrIn].forEach(function (el) { el.addEventListener('blur', render); });
+  window.addEventListener('resize', render);
+  window.addEventListener('themechange', render);
+  onCurrency(function (prev) {
+    // Moving between pesos and dollars/euros: bring the deposit back into the new slider range
+    setRange();
+    var r = RANGE[cur];
+    if ((prev === 'MXN') !== (cur === 'MXN') && (P < r[0] || P > r[1])) P = Math.max(r[0], Math.min(r[1], P));
+    save(); render();
+  });
+  setRange();
+  render();
+  if (document.fonts) document.fonts.ready.then(render);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savings jar</title>
+<script>
+  // Theme: add ?theme=light or ?theme=dark to the link to fix it; without it the widget follows the system setting
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var fixed = p === 'light' || p === 'dark';
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      document.documentElement.dataset.theme = fixed ? p : (mq.matches ? 'dark' : 'light');
+      window.dispatchEvent(new Event('themechange'));
+    }
+    apply();
+    if (!fixed && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #FDFBF7;
+    --ink: #1E1E1E;
+    --ink-rgb: 30, 30, 30;
+    --muted: rgba(var(--ink-rgb), 0.5);
+    --faint: rgba(var(--ink-rgb), 0.09);
+    --emerald: #2D5A43;
+    --emerald-rgb: 45, 90, 67;
+    --emerald-hi: #3E7A5B;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.09);
+    --solid: #2D5A43;
+    --solid-hover: #24493A;
+    --on-solid: #FDFBF7;
+    --gold: #C5A880;
+    --gold-ink: #9C7E52;
+    --gold-soft: rgba(197, 168, 128, 0.16);
+    --warn: #A0703F;
+    --sage: #8FA996;
+    --latte: #C4A484;
+    --sand: #E6D8C1;
+    --sand-ink: #7A6142;
+    --grey: #ECE8E1;
+    --glass: rgba(255, 255, 255, 0.55);
+    --shine: rgba(255, 255, 255, 0.9);
+    --liq-top: #3B7257;
+    --liq-bot: #2D5A43;
+    --liq-back: #5E8C73;
+  }
+  :root[data-theme="dark"] {
+    --linen: #1B1A18;
+    --ink: #EDE8DF;
+    --ink-rgb: 237, 232, 223;
+    --muted: rgba(var(--ink-rgb), 0.55);
+    --faint: rgba(var(--ink-rgb), 0.12);
+    --emerald: #74AA8C;
+    --emerald-rgb: 116, 170, 140;
+    --emerald-hi: #8CBEA2;
+    --emerald-soft: rgba(var(--emerald-rgb), 0.12);
+    --solid: #3A7457;
+    --solid-hover: #458566;
+    --on-solid: #F6F2EA;
+    --gold: #C5A880;
+    --gold-ink: #D8BF97;
+    --gold-soft: rgba(197, 168, 128, 0.14);
+    --warn: #DDA06A;
+    --sage: #7E9C88;
+    --latte: #B48F69;
+    --sand: #8A7B62;
+    --sand-ink: #F3EADB;
+    --grey: #2C2A27;
+    --glass: rgba(255, 255, 255, 0.04);
+    --shine: rgba(255, 255, 255, 0.14);
+    --liq-top: #4F8A6C;
+    --liq-bot: #2F5E47;
+    --liq-back: #2C4F3E;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--linen); }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative;
+    width: 100%; max-width: 360px;
+    height: 100%; max-height: 220px;
+    padding: 12px 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px solid var(--faint);
+    border-radius: 18px;
+    background: var(--linen);
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .title em { font-style: italic; color: var(--emerald); }
+  .cur {
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 9.5px/1 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.08em;
+    color: var(--muted); padding: 5px 9px; cursor: pointer; outline: 0;
+    transition: border-color .2s, color .2s;
+  }
+  .cur:hover, .cur:focus-visible { border-color: var(--gold); color: var(--ink); }
+  .lbl {
+    font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; white-space: nowrap;
+  }
+  .field {
+    display: flex; align-items: baseline; gap: 3px;
+    border-bottom: 1px solid var(--faint); padding: 2px 0 3px;
+    transition: border-color .2s;
+  }
+  .field:focus-within { border-color: var(--emerald); }
+  .field .pre { font-size: 12px; color: var(--muted); }
+  .field input {
+    border: 0; background: transparent; outline: 0; width: 100%; min-width: 0;
+    font: 600 14px 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .field input::placeholder { color: rgba(var(--ink-rgb), 0.25); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .num { font-variant-numeric: tabular-nums; }
+  .btn {
+    border: 1px solid var(--faint); background: transparent; border-radius: 999px;
+    font: 600 11px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+    padding: 7px 10px; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .1s;
+  }
+  .btn:hover { border-color: var(--gold); background: var(--gold-soft); }
+  .btn:active { transform: scale(0.96); }
+  .btn.solid { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .btn.solid:hover { background: var(--solid-hover); border-color: var(--solid-hover); }
+
+  .main { flex: 1; display: flex; align-items: center; gap: 14px; min-height: 0; }
+  .jar { width: 92px; height: 150px; flex: none; overflow: visible; }
+  .jar .glass { fill: var(--glass); stroke: rgba(var(--ink-rgb), 0.22); stroke-width: 1.4; }
+  .jar .shine { fill: none; stroke: var(--shine); stroke-width: 3; stroke-linecap: round; }
+  .jar .lid { fill: var(--gold); }
+  .jar .lid2 { fill: #B39468; }
+  .level { transition: transform 1s cubic-bezier(.3,.9,.3,1); }
+  .wave { animation: drift 3.2s linear infinite; }
+  .wave.back { animation-duration: 5s; animation-direction: reverse; opacity: .45; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-50px); } }
+  .side { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .pct { font-size: 38px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.95; color: var(--emerald); }
+  .pct sup { font-size: 16px; font-weight: 600; margin-left: 2px; vertical-align: 14px; color: var(--gold); }
+  .sub { font-size: 11px; color: var(--muted); margin-top: -2px; }
+  .sub b { color: var(--ink); font-weight: 600; }
+  .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .inputs .field input { font-size: 13px; }
+  .quick { display: flex; gap: 5px; }
+  .quick .btn { flex: 1; padding: 7px 0; font-size: 10.5px; }
+  .done .pct { color: var(--gold); }
+
+</style>
+</head>
+<body>
+<main class="card">
+  <header class="head">
+    <h1 class="title">Savings <em>jar</em></h1>
+    <select class="cur" id="cur" aria-label="Currency">
+      <option value="USD">$ USD</option>
+      <option value="MXN">$ MXN</option>
+      <option value="EUR">€ EUR</option>
+    </select>
+  </header>
+
+  <div class="main">
+    <svg class="jar" viewBox="0 0 92 150" aria-hidden="true">
+      <defs>
+        <clipPath id="inside"><path id="bodyClip"/></clipPath>
+        <linearGradient id="liq" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color:var(--liq-top)"/>
+          <stop offset="1" style="stop-color:var(--liq-bot)"/>
+        </linearGradient>
+      </defs>
+      <path class="glass" id="bodyGlass"/>
+      <g clip-path="url(#inside)">
+        <g class="level" id="level">
+          <g class="wave back"><path id="w2" style="fill:var(--liq-back)"/></g>
+          <g class="wave"><path id="w1" fill="url(#liq)"/></g>
+        </g>
+      </g>
+      <path class="shine" d="M20 70 V118"/>
+      <rect class="lid2" x="24" y="14" width="44" height="6" rx="2"/>
+      <rect class="lid" x="21" y="4" width="50" height="12" rx="4"/>
+      <g id="coins"></g>
+    </svg>
+    <div class="side">
+      <div><div class="pct num" id="pct">0<sup>%</sup></div></div>
+      <div class="sub num" id="sub"><b>$0</b> of $0</div>
+      <div class="inputs">
+        <div><div class="lbl">Goal</div><label class="field"><span class="pre" data-sym>$</span><input id="goal" type="number" inputmode="decimal" min="0" step="any" placeholder="500" aria-label="Savings goal"></label></div>
+        <div><div class="lbl">Saved</div><label class="field"><span class="pre" data-sym>$</span><input id="saved" type="number" inputmode="decimal" min="0" step="any" placeholder="0" aria-label="Amount saved"></label></div>
+      </div>
+      <div class="quick">
+        <button class="btn" data-i="0"></button>
+        <button class="btn" data-i="1"></button>
+        <button class="btn" data-i="2"></button>
+      </div>
+    </div>
+  </div>
+
+</main>
+<script>
+  // Shared helpers: safe storage, currency and formatting
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var SYM = { USD: '$', MXN: '$', EUR: '€' };
+  var cur = store.get('fw-currency', 'USD');
+  if (!SYM[cur]) cur = 'USD';
+  var curSel = document.getElementById('cur');
+  curSel.value = cur;
+  function num(v) { var n = parseFloat(String(v).replace(/,/g, '')); return isFinite(n) && n > 0 ? n : 0; }
+  function money(n, dec) {
+    var d = dec == null ? (Math.round(n) === n ? 0 : 2) : dec;
+    return SYM[cur] + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function syncSymbols() {
+    document.querySelectorAll('[data-sym]').forEach(function (el) { el.textContent = SYM[cur]; });
+  }
+  function onCurrency(fn) {
+    curSel.addEventListener('change', function () { var prev = cur; cur = curSel.value; store.set('fw-currency', cur); syncSymbols(); fn(prev); });
+    // If another widget changes the currency in the same browser, this one follows
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fw-currency') { var prev = cur; cur = store.get('fw-currency', 'USD'); curSel.value = cur; syncSymbols(); fn(prev); }
+    });
+    syncSymbols();
+  }
+
+  var KEY = 'fw-savings-jar';
+  var goalIn = document.getElementById('goal'), savedIn = document.getElementById('saved');
+  var st = store.get(KEY, { goal: '500', saved: '0' });
+  goalIn.value = st.goal; savedIn.value = st.saved;
+
+  // Jar outline (glass and the inner area the liquid fills)
+  var JAR = 'M27 20 H65 V27 Q65 31 71 35 Q84 43 84 60 V128 Q84 144 68 144 H24 Q8 144 8 128 V60 Q8 43 21 35 Q27 31 27 27 Z';
+  document.getElementById('bodyGlass').setAttribute('d', JAR);
+  document.getElementById('bodyClip').setAttribute('d', JAR);
+  var TOP = 30, BOTTOM = 144;
+
+  function wavePath(amp) {
+    var d = 'M-50 0';
+    for (var x = -50; x < 150; x += 50) d += ' q12.5 ' + (-amp) + ' 25 0 t25 0';
+    return d + ' V160 H-50 Z';
+  }
+  document.getElementById('w1').setAttribute('d', wavePath(3.2));
+  document.getElementById('w2').setAttribute('d', wavePath(4.5));
+
+  function levelY(p) { return BOTTOM + 7 - p * (BOTTOM + 7 - TOP); }
+
+  function save() { store.set(KEY, { goal: goalIn.value, saved: savedIn.value }); }
+
+  function render() {
+    var goal = num(goalIn.value), saved = num(savedIn.value);
+    var p = goal > 0 ? Math.min(saved / goal, 1) : 0;
+    var shown = goal > 0 ? Math.floor((saved / goal) * 100) : 0;
+    document.getElementById('level').style.transform = 'translateY(' + levelY(p) + 'px)';
+    document.getElementById('pct').innerHTML = shown + '<sup>%</sup>';
+    document.getElementById('sub').innerHTML = '<b>' + money(saved) + '</b> of ' + money(goal);
+    document.querySelector('.card').classList.toggle('done', goal > 0 && saved >= goal);
+  }
+
+  function dropCoin() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var g = document.createElementNS(ns, 'g');
+    var c = document.createElementNS(ns, 'circle');
+    c.setAttribute('r', '5'); c.setAttribute('fill', '#C5A880'); c.setAttribute('stroke', '#A88B60'); c.setAttribute('stroke-width', '1');
+    var i = document.createElementNS(ns, 'circle');
+    i.setAttribute('r', '2.4'); i.setAttribute('fill', 'none'); i.setAttribute('stroke', '#E8D6B8'); i.setAttribute('stroke-width', '.8');
+    g.appendChild(c); g.appendChild(i);
+    document.getElementById('coins').appendChild(g);
+    var x = 34 + Math.random() * 24;
+    var goal = num(goalIn.value), saved = num(savedIn.value);
+    var end = Math.max(levelY(goal > 0 ? Math.min(saved / goal, 1) : 0) + 4, 40);
+    var anim = g.animate([
+      { transform: 'translate(' + x + 'px,-8px)', opacity: 0 },
+      { transform: 'translate(' + x + 'px,10px)', opacity: 1, offset: 0.15 },
+      { transform: 'translate(' + (x + 3) + 'px,' + end + 'px)', opacity: 1, offset: 0.85 },
+      { transform: 'translate(' + (x + 3) + 'px,' + (end + 6) + 'px)', opacity: 0 }
+    ], { duration: 900, easing: 'cubic-bezier(.5,0,.8,.6)' });
+    anim.onfinish = function () { g.remove(); };
+  }
+
+  // Quick-add amounts scale with the currency: pesos get bigger steps
+  var STEPS = { USD: [10, 50, 100], EUR: [10, 50, 100], MXN: [100, 500, 1000] };
+  var btns = document.querySelectorAll('[data-i]');
+  function labelButtons() {
+    btns.forEach(function (b) { b.textContent = '+' + money(STEPS[cur][b.dataset.i], 0); });
+  }
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = num(savedIn.value) + STEPS[cur][b.dataset.i];
+      savedIn.value = Math.round(v * 100) / 100;
+      save(); dropCoin(); setTimeout(render, 450);
+    });
+  });
+  [goalIn, savedIn].forEach(function (el) { el.addEventListener('input', function () { save(); render(); }); });
+  onCurrency(function () { labelButtons(); render(); });
+  labelButtons();
+  render();
+
+</script>
+</body>
+</html>
