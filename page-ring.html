@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book progress</title>
+<script>
+  // Tema: ?theme=dark o ?theme=light en el enlace; sin parámetro sigue el modo del sistema
+  (function () {
+    var p = new URLSearchParams(location.search).get('theme');
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() { document.documentElement.dataset.theme = (p === 'dark' || p === 'light') ? p : (mq.matches ? 'dark' : 'light'); }
+    apply();
+    if (p !== 'dark' && p !== 'light' && mq.addEventListener) mq.addEventListener('change', apply);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vanilla: #FAF7F2;
+    --linen: #FFFFFF;
+    --espresso: #2E2620;
+    --sage: #8A9A86;
+    --rose: #D9A5B3;
+    --muted: rgba(var(--ink-rgb), 0.45);
+    --ink-rgb: 46, 38, 32;
+    --shadow-rgb: 46, 38, 32;
+    --sage-rgb: 138, 154, 134;
+    --rose-rgb: 217, 165, 179;
+    --sage-tint: #EEF1EC;
+    --hover: #F2EEE7;
+    --latte: #C8B39B;
+  }
+  :root[data-theme="dark"] {
+    --vanilla: #26211D;
+    --linen: #322B26;
+    --bone: #201C19;
+    --linen-soft: #201C19;
+    --espresso: #EFE7DC;
+    --sage: #A3B49E;
+    --rose: #E2B3C0;
+    --ink-rgb: 239, 231, 220;
+    --shadow-rgb: 0, 0, 0;
+    --sage-rgb: 163, 180, 158;
+    --rose-rgb: 226, 179, 192;
+    --sage-tint: #2F352D;
+    --hover: #3A322C;
+    --latte: #A88F75;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: transparent; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--espresso);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: 100%; max-width: 340px; min-width: 260px;
+    height: 200px;
+    background: var(--vanilla);
+    border-radius: 20px;
+    box-shadow: 0 8px 28px rgba(var(--shadow-rgb), 0.06);
+    padding: 12px 20px 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .ring { position: relative; width: 92px; height: 92px; }
+  .title {
+    width: 100%; max-width: 260px;
+    border: none; outline: none; background: transparent;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 17px; font-weight: 600; font-style: italic;
+    color: var(--espresso); text-align: center;
+    padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background 0.25s ease;
+  }
+  .title:focus { background: var(--linen); }
+  .title::placeholder { color: rgba(var(--ink-rgb), 0.3); }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+  .track { fill: none; stroke: rgba(var(--ink-rgb), 0.07); stroke-width: 4; }
+  .arc {
+    fill: none; stroke: var(--sage); stroke-width: 4; stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s cubic-bezier(.22, .8, .3, 1), stroke 0.6s ease;
+  }
+  .complete .arc { stroke: var(--rose); }
+  .pct {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 27px; font-weight: 600; letter-spacing: -0.01em;
+    font-variant-numeric: lining-nums;
+  }
+  .pct small { font-size: 17px; font-weight: 500; color: var(--muted); margin-left: 1px; }
+
+  .fields { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 250px; }
+  .field { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .field input {
+    width: 100%;
+    border: none; outline: none;
+    background: var(--linen);
+    border-radius: 12px;
+    padding: 6px 8px;
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--espresso);
+    text-align: center;
+    box-shadow: inset 0 0 0 1px rgba(var(--ink-rgb), 0.05);
+    transition: box-shadow 0.25s ease;
+    -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button, .field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .field input:focus { box-shadow: inset 0 0 0 1px rgba(var(--sage-rgb), 0.6); }
+  .field input::placeholder { color: rgba(var(--ink-rgb), 0.25); }
+  .field label { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .sep { color: rgba(var(--ink-rgb), 0.2); font-size: 14px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <input class="title" id="title" type="text" maxlength="60" placeholder="Book title" aria-label="Book title">
+    <div class="ring">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="44"/>
+        <circle class="arc" id="arc" cx="50" cy="50" r="44"/>
+      </svg>
+      <div class="pct"><span><span id="pct">0</span><small>%</small></span></div>
+    </div>
+    <div class="fields">
+      <div class="field">
+        <input id="current" type="number" min="0" inputmode="numeric" placeholder="0">
+        <label for="current">Current page</label>
+      </div>
+      <span class="sep">/</span>
+      <div class="field">
+        <input id="total" type="number" min="1" inputmode="numeric" placeholder="320">
+        <label for="total">Total pages</label>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const KEY = 'cozy-page-ring-v1';
+  const card = document.getElementById('card');
+  const arc = document.getElementById('arc');
+  const pctEl = document.getElementById('pct');
+  const cur = document.getElementById('current');
+  const tot = document.getElementById('total');
+  const titleEl = document.getElementById('title');
+
+  const C = 2 * Math.PI * 44;
+  arc.style.strokeDasharray = C;
+  arc.style.strokeDashoffset = C;
+
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY)) || {};
+    if (s.current != null) cur.value = s.current;
+    if (s.total != null) tot.value = s.total;
+    if (s.title) titleEl.value = s.title;
+  } catch (e) {}
+
+  let shown = 0, raf = null;
+  function animateNumber(to) {
+    cancelAnimationFrame(raf);
+    const from = shown, start = performance.now(), dur = 900;
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      shown = Math.round(from + (to - from) * e);
+      pctEl.textContent = shown;
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+
+  function update() {
+    const c = Math.max(0, parseInt(cur.value, 10) || 0);
+    const t = Math.max(0, parseInt(tot.value, 10) || 0);
+    const pct = t > 0 ? Math.min(100, Math.round((c / t) * 100)) : 0;
+    arc.style.strokeDashoffset = C * (1 - pct / 100);
+    card.classList.toggle('complete', pct >= 100);
+    animateNumber(pct);
+    try { localStorage.setItem(KEY, JSON.stringify({ title: titleEl.value, current: cur.value, total: tot.value })); } catch (e) {}
+  }
+
+  cur.addEventListener('input', update);
+  tot.addEventListener('input', update);
+  titleEl.addEventListener('input', update);
+  titleEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') titleEl.blur(); });
+  // Pequeño retraso para que el anillo se llene con animación al cargar
+  requestAnimationFrame(() => setTimeout(update, 60));
+</script>
+</body>
+</html>
